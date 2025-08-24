@@ -1,0 +1,57 @@
+﻿name: Staging on gh-pages push
+
+on:
+  push:
+    branches: [ gh-pages ]
+
+jobs:
+  ci-staging:
+    name: "CI rápido (staging)"
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name:  Checkout código
+        uses: actions/checkout@v4
+      
+      - name: 🧪 Testes rápidos staging
+        run: |
+          echo "✅ [TEST-STAGING] Verificando staging/index.html..."
+          test -f staging/index.html
+          echo " [TEST-STAGING] Arquivo staging existe"
+          
+          echo " [TEST-STAGING] Verificando conteúdo..."
+          cat staging/index.html
+          echo " [TEST-STAGING] CI staging concluído!"
+
+  deploy-staging:
+    name: "Deploy para /staging (gh-pages)"
+    runs-on: ubuntu-latest
+    needs: ci-staging
+    
+    steps:
+      - name:  Checkout código
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name:  Preparar para deploy staging
+        run: |
+          echo " Preparando deploy para /staging..."
+          
+          touch .nojekyll
+          
+          echo " Conteúdo que será publicado:"
+          echo "- index.html (produção)"
+          echo "- staging/index.html (staging)"
+          ls -la
+          
+          echo " Deploy staging preparado!"
+      
+      - name:  Commit arquivos atualizados
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          
+          git add .nojekyll
+          git diff --staged --quiet || git commit -m "deploy: staging atualizado automaticamente"
+          git push origin gh-pages || echo "Nada para commitar"
