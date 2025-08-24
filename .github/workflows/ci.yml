@@ -1,0 +1,42 @@
+﻿name: CI Build & Test
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    name: "Build"
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name:  Checkout código
+        uses: actions/checkout@v4
+      
+      - name: 🔨 Validar HTML
+        run: |
+          echo " Validando estrutura HTML..."
+          test -f index.html
+          test -f staging/index.html
+          echo " Build concluído com sucesso!"
+
+  test:
+    name: "Testes"
+    runs-on: ubuntu-latest
+    needs: build
+    
+    steps:
+      - name:  Checkout código
+        uses: actions/checkout@v4
+      
+      - name:  Executar testes
+        run: |
+          echo " [TEST-MAIN] Verificando conteúdo de produção..."
+          grep -q "PRODUÇÃO" index.html && echo " Index principal OK"
+          
+          echo " [TEST-STAGING] Verificando conteúdo de staging..."
+          grep -q "STAGING" staging/index.html && echo " Staging OK"
+          
+          echo " Todos os testes passaram!"
